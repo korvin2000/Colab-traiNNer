@@ -1,14 +1,13 @@
-name: ESRGAN
-scale: 4
+name: template
+scale: 2
 gpus: 1 # amount of gpus, 0 = cpu
 strategy: ddp # dp, ddp, ddp_spawn, ddp2, horovod, bagua
 tpu_cores: 8 # 8 if you use a Google Colab TPU
 use_tpu: False
-use_precision: fp32 # bf16 | fp16 | fp32
-use_amp: True
+use_precision: bf16 # bf16 | fp16 | fp32
 use_swa: False
 progress_bar_refresh_rate: 20
-default_root_dir: '/home/korvin/apps/Colab-traiNNer/train'
+default_root_dir: '/home/user/Schreibtisch/Colab-traiNNer/train'
 logging: True # colab easily crashes with logging, disable in colab
 
 # Dataset options:
@@ -23,28 +22,26 @@ datasets:
     # DS_realesrgan: will use the realesrgan dataloader (only uses hr folder)
     # pip install --extra-index-url https://developer.download.nvidia.com/compute/redist --upgrade nvidia-dali-cuda110
 
-    mode: DS_lrhr # DS_video | DS_video_direct | DS_inpaint_TF | DS_inpaint  | DS_lrhr | DS_realesrgan
+    mode: DS_realesrgan # DS_video | DS_video_direct | DS_inpaint_TF | DS_inpaint  | DS_lrhr | DS_realesrgan
     amount_files: 7 # tfrecord files do not store amount of images and are infinite, specify the images inside of it
 
     tfrecord_path: "/content/tfrecord/tfrecord-r09.tfrecords"
-    dataroot_HR: '/home/korvin/apps/Colab-traiNNer/train/HR' # Original, with a single directory. Inpainting will use this directory as source image.
-    dataroot_LR: '/home/korvin/apps/Colab-traiNNer/train/LR' # Original, with a single directory
+    dataroot_HR: '/home/user/Schreibtisch/Colab-traiNNer/train/data' # Original, with a single directory. Inpainting will use this directory as source image.
+    dataroot_LR: '/home/user/Schreibtisch/Colab-traiNNer/train/data' # Original, with a single directory
     loading_backend: 'OpenCV' # 'PIL' | 'OpenCV' | 'turboJPEG' # install needed for turboJPEG, turboJPEG only for DS_video, 'PIL' for DS_inpaint_TF
 
     n_workers: 16 # 0 to disable CPU multithreading, or an integrer representing CPU threads to use for dataloading
     pipeline_threads: 16 # only for DS_video_direct
-    batch_size: 5 # 6
+    batch_size: 10 # 6
     
     # does not apply to video dataloaders, look into python file instead
-    HR_size: 512 # The resolution the network will get. Random crop gets applied if that resolution does not match.
+    HR_size: 256 # The resolution the network will get. Random crop gets applied if that resolution does not match.
     image_channels: 3 # number of channels to load images in
 
-    #masks: '/workspace/tensorrt/training/data/inpaint_mask/' # only for inpainting
-    #mask_invert_ratio: 0.3 # 0.3 = 30% of masks will be inverted
-    masks: '/home/korvin/apps/Colab-traiNNer/train/masks/' # only for inpainting
+    masks: '/workspace/tensorrt/training/data/inpaint_mask/' # only for inpainting
     mask_invert_ratio: 0.3 # 0.3 = 30% of masks will be inverted
     max_epochs: 20000
-    save_step_frequency: 200 # also validation frequency
+    save_step_frequency: 50 # also validation frequency
 
     # if edge data is required
     canny_min: 100
@@ -93,17 +90,17 @@ datasets:
 
   val:
     loading_backend: 'OpenCV' # 'OpenCV' | 'turboJPEG' # install needed for turboJPEG, currently only for DS_video
-    dataroot_HR: '/home/korvin/apps/Colab-traiNNer/train/val_hr'
-    dataroot_LR: '/home/korvin/apps/Colab-traiNNer/train/val_lr' # Inpainting will use this directory as input
+    dataroot_HR: '/home/user/Schreibtisch/Colab-traiNNer/train/val_input'
+    dataroot_LR: '/home/user/Schreibtisch/Colab-traiNNer/train/val_input' # Inpainting will use this directory as input
 
 path:
     pretrain_model_G: 
     pretrain_model_G_teacher:
     pretrain_model_D:
     checkpoint_path: 
-    checkpoint_save_path: '/home/korvin/apps/Colab-traiNNer/train'
-    validation_output_path: '/home/korvin/apps/Colab-traiNNer/train/val/'
-    log_path: '/home/korvin/apps/Colab-traiNNer/train/logs/'
+    checkpoint_save_path: '/home/user/Schreibtisch/GIT/Colab-traiNNer/train'
+    validation_output_path: '/home/user/Schreibtisch/GIT/Colab-traiNNer/train/val/'
+    log_path: '/home/user/Schreibtisch/GIT/Colab-traiNNer/train/logs/'
 
 # using a teacher model to generate hr, has same configuration as normal netG
 # if teacher is used, same loss functions will be applied to both images
@@ -115,7 +112,8 @@ network_G_teacher:
     # comparing feature maps of teacher and student with l1
     l1_feature_maps_weight: 1
 
-    netG:
+    netG: 
+
     #netG: MRRDBNet_FM # RRDB_net (original ESRGAN arch) | MRRDBNet_FM (modified/"new" arch) with feature map knowledge distillation
     #norm_type: null
     #mode: CNA
@@ -160,27 +158,27 @@ network_G:
     finetune: False # Important for further rfr/dsnet training. Apply that after training for a while. https://github.com/jingyuanli001/RFR-Inpainting/issues/33
 
     # ESRGAN:
-    netG: RRDB_net # RRDB_net (original ESRGAN arch) | MRRDBNet_FM (modified/"new" arch) with feature map knowledge distillation
-    norm_type: null
-    mode: CNA
-    nf: 32 # of discrim filters in the first conv layer (default: 64, good: 32)
-    nb: 8 # (default: 23, good: 8)
-    in_nc: 3 # of input image channels: 3 for RGB and 1 for grayscale
-    out_nc: 3 # of output image channels: 3 for RGB and 1 for grayscale
-    gc: 32
-    convtype: Conv2D # Conv2D | PartialConv2D | doconv | gated | TBC | dynamic | MBConv | CondConv | fft | WSConv
-    nr: 3
+    #netG: RRDB_net # RRDB_net (original ESRGAN arch) | MRRDBNet_FM (modified/"new" arch) with feature map knowledge distillation
+    #norm_type: null
+    #mode: CNA
+    #nf: 64 # of discrim filters in the first conv layer (default: 64, good: 32)
+    #nb: 3 # (default: 23, good: 8)
+    #in_nc: 3 # of input image channels: 3 for RGB and 1 for grayscale
+    #out_nc: 3 # of output image channels: 3 for RGB and 1 for grayscale
+    #gc: 32
+    #convtype: Conv2D # Conv2D | PartialConv2D | doconv | gated | TBC | dynamic | MBConv | CondConv | fft | WSConv
+    #nr: 3
     # for dynamic
-    nof_kernels: 4
-    reduce: 4
+    #nof_kernels: 4
+    #reduce: 4
     # RRDB_net
-    net_act: leakyrelu # swish | leakyrelu
-    gaussian: false # true | false # esrgan plus, does not work on TPU because of cuda()
-    plus: false # true | false
-    finalact: None #tanh # Test. Activation function to make outputs fit in [-1, 1] range. Default = None. Coordinate with znorm.
-    upsample_mode: 'upconv'
-    strided_conv: False
-    group: 1 # unused for now
+    #net_act: leakyrelu # swish | leakyrelu
+    #gaussian: false # true | false # esrgan plus, does not work on TPU because of cuda()
+    #plus: false # true | false
+    #finalact: None #tanh # Test. Activation function to make outputs fit in [-1, 1] range. Default = None. Coordinate with znorm.
+    #upsample_mode: 'upconv'
+    #strided_conv: False
+    #group: 1 # unused for now
 
     # CUGAN
     #netG: UpCunet2x # UpCunet2x_fast / UpCunet2x
@@ -243,24 +241,24 @@ network_G:
     #patch_size: 8
 
     # dat (2023)
-    #netG: dat
-    #img_size: 64
-    #in_chans: 3
-    #embed_dim: 180
-    #split_size: [2,4]
-    #depth: [2,2,2,2]
-    #num_heads: [2,2,2,2]
-    #expansion_factor: 4.
-    #qkv_bias: True
-    #qk_scale: 
-    #drop_rate: 0.
-    #attn_drop_rate: 0.
-    #drop_path_rate: 0.1
-    #use_chk: False
-    #upscale: 2,
-    #img_range: 1.
-    #resi_connection: '1conv'
-    #upsampler: 'pixelshuffle'
+    netG: dat
+    img_size: 64
+    in_chans: 3
+    embed_dim: 180
+    split_size: [2,4]
+    depth: [2,2,2,2]
+    num_heads: [2,2,2,2]
+    expansion_factor: 4.
+    qkv_bias: True
+    qk_scale: 
+    drop_rate: 0.
+    attn_drop_rate: 0.
+    drop_path_rate: 0.1
+    use_chk: False
+    upscale: 2,
+    img_range: 1.
+    resi_connection: '1conv'
+    upsampler: 'pixelshuffle'
 
     # SAFMN (2023)
     #netG: SAFMN
@@ -1042,10 +1040,10 @@ network_D:
     #num_D: 2
 
     # U-Net (from RealESRGAN) (2021)
-    netD: unet
-    num_in_ch: 3
-    num_feat: 64
-    skip_connection: True
+    #netD: unet
+    #num_in_ch: 3
+    #num_feat: 64
+    #skip_connection: True
 
 train: 
     # Adam8bit needs "pip install bitsandbytes-cuda111"
@@ -1070,7 +1068,7 @@ train:
     ## Losses ##    
     ############################
 
-    L1Loss_weight: 0.5
+    L1Loss_weight: 0
 
     # HFENLoss
     HFEN_weight: 0
@@ -1091,7 +1089,7 @@ train:
     reduction_relative: 'mean'
 
     # L1CosineSim (3-channel input)
-    L1CosineSim_weight: 0 # korvin: try 1 and read about it
+    L1CosineSim_weight: 1
     loss_lambda: 5
     reduction_L1CosineSim: 'mean'
 
@@ -1127,7 +1125,7 @@ train:
     p: 1
 
     # Contextual_Loss (3-channel input)
-    Contextual_weight: 0.25
+    Contextual_weight: 0
     crop_quarter: False
     max_1d_size: 100
     distance_type: 'cosine' # ["11", "l2", "consine"]
@@ -1147,7 +1145,7 @@ train:
     StyleLoss_weight: 0
 
     # PerceptualLoss
-    perceptual_weight: 0.75
+    perceptual_weight: 0
     net: PNetLin # PNetLin, DSSIM (?)
     pnet_type: 'vgg' # alex, squeeze, vgg
     pnet_rand: False
@@ -1180,14 +1178,8 @@ train:
     # pytorch loss functions
     MSE_weight: 0
     BCE_weight: 0
-    Huber_weight: 0.5
+    Huber_weight: 0
     SmoothL1_weight: 0
-
-    # added new to force it work
-    KID_weight: 0
-    IS_weight: 0
-    FID_weight: 0
-    PR_weight: 0
 
     ############################
     ## ARCH SPECIFIC LOSS ##
@@ -1220,7 +1212,7 @@ train:
     textured_loss_weight: 0
 
     # Canny
-    Canny_weight: 0 # 0.01
+    Canny_weight: 1 # 0.01
     canny_threshold: 5
     canny_blurred_img_weight: 0
     canny_grad_mag_weight: 0
@@ -1239,7 +1231,7 @@ train:
     TIMM_FeatureLoss_last_feature: False # False means that all features will be used in a sum
 
     # IQA-PyTorch Loss
-    iqa_weight: 0
+    iqa_weight: 1
     # https://github.com/chaofengc/IQA-PyTorch/blob/main/pyiqa/default_model_configs.py
     # only fr methods
     ## method FR
@@ -1253,7 +1245,7 @@ train:
     # clipiqa+_vitL14_512 | clipiqa+_rn50_512 | tres | tres-koniq | tres-flive | hyperiqa |
     # uranker | clipscore | entropy | topiq_nr | topiq_nr-flive | topiq_nr-spaq | topiq_iaa
     # topiq_iaa_res50 | laion_aes
-    iqa_metric: "topiq_fr" 
+    iqa_metric: "topiq_nr" 
     iqa_method: FR
     # inform yourself if value going to 1 or to 0 means higher quality
     # if set to true, it will apply 1 - result instead of returning result

@@ -6,6 +6,7 @@ import sys
 
 import torch
 
+torch.cuda.empty_cache() 
 torch.set_float32_matmul_precision("medium")
 
 with open("config.yaml", "r") as ymlfile:

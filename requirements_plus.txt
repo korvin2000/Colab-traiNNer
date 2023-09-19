@@ -1,0 +1,11 @@
+git+https://github.com/styler00dollar/piq.git
+git+https://github.com/open-mmlab/mmcv
+ninja
+#correlation-package
+cupy-cuda12x
+nebulgym
+timm
+#crc32c==2.0
+vit-pytorch
+git+https://github.com/TimDettmers/bitsandbytes
+git+https://github.com/lilohuang/PyTurboJPEG.git

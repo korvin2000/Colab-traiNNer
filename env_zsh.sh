@@ -14,6 +14,7 @@ export PYTHON="$CPYTHON_DIR/install/bin"
 export PY_PIP="$CPYTHON_DIR/install/bin"
 export PY_LIBS="$CPYTHON_DIR/install/lib;$CPYTHON_DIR/install/include/python3.11"
 export SKIP_VENV=1
+export CUDA_HOME=/opt/cuda
 
 
 # Check if the directory exists

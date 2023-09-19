@@ -2630,7 +2630,7 @@ class ldl_loss(nn.Module):
 
 
 class IQA_loss(nn.Module):
-    def __init__(self, iqa_metric="cw_ssim", iqa_method="FR", iqa_invert=True):
+    def __init__(self, iqa_metric="topiq_nr", iqa_method="FR", iqa_invert=True):
         super(IQA_loss, self).__init__()
         device = (
             torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
